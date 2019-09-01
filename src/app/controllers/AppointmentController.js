@@ -1,5 +1,5 @@
 import * as Yup from 'yup';
-import { startOfHour, parseISO, isBefore, format } from 'date-fns';
+import { startOfHour, parseISO, isBefore, format, subHours } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import Appointment from '../models/Appointment';
 import User from '../models/User';
@@ -99,6 +99,29 @@ class AppointmentController {
       content: `Novo agendamento de ${user.name} para dia ${formateDate}`,
       user: provider_id,
     });
+
+    return res.json(appointment);
+  }
+
+  async delete(req, res) {
+    const appointment = await Appointment.findByPk(req.params.id);
+
+    if (req.userId !== appointment.user_id) {
+      return res.status(403).json({
+        error: 'You dont have permission to cancel this appointment.',
+      });
+    }
+
+    const hourToCancel = subHours(appointment.date, 2);
+
+    if (isBefore(hourToCancel, new Date())) {
+      return res.status(403).json({
+        error: 'This appointment not be canceled, 2 hours limit went exceed',
+      });
+    }
+
+    appointment.canceled_at = new Date();
+    await appointment.save();
 
     return res.json(appointment);
   }
