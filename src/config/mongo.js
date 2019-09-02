@@ -1,5 +1,5 @@
 module.exports = {
-  uris: 'mongodb://localhost:27017/gobarber',
+  uris: process.env.MONGO_URL,
   options: {
     useNewUrlParser: true,
     useFindAndModify: true,
